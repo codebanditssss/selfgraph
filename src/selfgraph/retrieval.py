@@ -487,7 +487,11 @@ async def _traverse(
             other = rel.to_entity if rel.from_entity == node else rel.from_entity
             if dist.get(other, depth + 1) > d + 1:
                 frontier.append((other, d + 1))
-    hubs = {n for n in dist if len(adjacency.get(n, ())) >= HUB_DEGREE}
+    missing = [n for n in dist if n not in adjacency]
+    adjacency.update(await _neighbors(graph, ns, missing, as_of))
+    for node in dist:
+        relations.update((rel.id, rel) for rel in adjacency[node])
+    hubs = {n for n in dist if len(adjacency[n]) >= HUB_DEGREE}
     return dist, _within(relations.values(), dist), hubs
 
 

@@ -624,6 +624,11 @@ async function traverse(
       if ((dist.get(other) ?? depth + 1) > d + 1) frontier.push([other, d + 1]);
     }
   }
+  const missing = [...dist.keys()].filter((n) => !adjacency.has(n));
+  for (const [n, rels] of await neighbors(store, ns, missing, asOf)) adjacency.set(n, rels);
+  for (const node of dist.keys()) {
+    for (const rel of adjacency.get(node) ?? []) relations.set(rel.id, rel);
+  }
   const hubs = new Set([...dist.keys()].filter((n) => (adjacency.get(n)?.length ?? 0) >= HUB_DEGREE));
   return [dist, within(relations.values(), dist), hubs];
 }

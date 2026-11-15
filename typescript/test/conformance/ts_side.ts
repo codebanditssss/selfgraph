@@ -356,6 +356,15 @@ export async function dump(graph: SelfGraph, ns: string): Promise<unknown> {
     const r = await graph.retrieve("Grace Hopper COBOL Jane acme", { strategy: walk, k: 1, depth: 4, max_nodes: 3 });
     tight[walk] = { entities: r.subgraph.entities.map((e) => e.id), relations: r.subgraph.relations.map((x) => x.id) };
   }
+  const boundary: Record<string, unknown> = {};
+  for (const strategy of ["bfs", "dfs", "ppr"] as const) {
+    const r = await graph.retrieve("Jane acme HydraDB", { strategy, k: 3, depth: 0 });
+    boundary[strategy] = {
+      entities: r.subgraph.entities.map((e) => e.id).sort(),
+      relations: r.subgraph.relations.map((x) => x.id).sort(),
+      decisions: r.subgraph.decisions.map((d) => d.title).sort(),
+    };
+  }
   const termed = new SelfGraph(store, { namespace: ns, schema: TERMS_SPEC, extraction: "regex" });
   const answerable = [];
   for (const q of TERM_QUESTIONS) answerable.push(await termed.checkAnswerable(q));
@@ -382,6 +391,7 @@ export async function dump(graph: SelfGraph, ns: string): Promise<unknown> {
     retrieval: { seeds: retrieval.seeds, context: retrieval.context },
     retrieval_ppr: { seeds: ppr.seeds, context: ppr.context, entities: ppr.subgraph.entities.map((e) => e.id) },
     retrieval_dfs: { seeds: dfs.seeds, context: dfs.context },
+    retrieval_boundary: boundary,
     retrieval_tight: tight,
   });
 }

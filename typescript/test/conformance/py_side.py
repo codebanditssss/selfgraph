@@ -341,6 +341,9 @@ async def dump(graph, ns):
         walk: await graph.retrieve("Grace Hopper COBOL Jane acme", strategy=walk, k=1, depth=4, max_nodes=3)
         for walk in ("bfs", "dfs")
     }
+    boundary = {
+        walk: await graph.retrieve("Jane acme HydraDB", strategy=walk, k=3, depth=0) for walk in ("bfs", "dfs", "ppr")
+    }
     termed = SelfGraph(store=store, namespace=ns, schema=TERMS_SPEC, extraction="regex")
     answerable = [await termed.check_answerable(q) for q in TERM_QUESTIONS]
     seeded = {
@@ -370,6 +373,14 @@ async def dump(graph, ns):
                 "entities": [e.id for e in ppr.subgraph.entities],
             },
             "retrieval_dfs": {"seeds": dfs.seeds, "context": dfs.context},
+            "retrieval_boundary": {
+                walk: {
+                    "entities": sorted(e.id for e in r.subgraph.entities),
+                    "relations": sorted(x.id for x in r.subgraph.relations),
+                    "decisions": sorted(d.title for d in r.subgraph.decisions),
+                }
+                for walk, r in boundary.items()
+            },
             "retrieval_tight": {
                 walk: {
                     "entities": [e.id for e in r.subgraph.entities],
